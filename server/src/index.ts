@@ -1,12 +1,4 @@
-// server/src/index.ts
-// Express server entry point for the Niti-Setu RAG backend.
-//
-// Routes:
-//   GET  /api/health           — health check
-//   GET  /api/schemes          — fetch all schemes from MongoDB
-//   GET  /api/schemes/:id/chunks — chunk count for a scheme
-//   POST /api/schemes/upload   — upload a new PDF and trigger ingestion
-//   POST /api/eligibility      — run RAG chain for a farmer profile
+console.log("\n🏁 SERVER_BOOT_START - Attempting to load modules...\n");
 
 import dns from "node:dns";
 
@@ -65,19 +57,22 @@ async function start(): Promise<void> {
       console.log(`   Upload PDF:  POST /api/schemes/upload\n`);
     });
   } catch (err) {
-    console.error("❌ Failed to start server:", err);
-    process.exit(1);
+    const errorMsg = `\n❌ Failed to start server:\n${err instanceof Error ? err.stack : err}\n`;
+    process.stderr.write(errorMsg);
+    setTimeout(() => process.exit(1), 500);
   }
 }
 
 // ── Global Error Handlers ──────────────────────────────────────────────
 process.on("unhandledRejection", (reason, promise) => {
-  console.error("🛑 Unhandled Rejection at:", promise, "reason:", reason);
+  const msg = `\n🛑 Unhandled Rejection at: ${promise} reason: ${reason}\n`;
+  process.stderr.write(msg);
 });
 
 process.on("uncaughtException", (err) => {
-  console.error("🛑 Uncaught Exception:", err);
-  process.exit(1);
+  const msg = `\n🛑 Uncaught Exception:\n${err.stack || err}\n`;
+  process.stderr.write(msg);
+  setTimeout(() => process.exit(1), 500);
 });
 
 start();
