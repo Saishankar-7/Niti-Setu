@@ -9,12 +9,18 @@ import dotenv from "dotenv";
 import type { Scheme, Chunk } from "./types.js";
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI as string;
-const client = new MongoClient(MONGODB_URI);
 let db: Db;
+let client: MongoClient;
 
 export async function connectDB(): Promise<Db> {
   if (db) return db;
+
+  const MONGODB_URI = process.env.MONGODB_URI;
+  if (!MONGODB_URI) {
+    throw new Error("❌ MONGODB_URI is not defined in environment variables.");
+  }
+
+  client = new MongoClient(MONGODB_URI);
   await client.connect();
   db = client.db("nitisetu");
   console.log("✅ Connected to MongoDB Atlas");

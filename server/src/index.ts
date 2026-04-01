@@ -9,7 +9,11 @@
 //   POST /api/eligibility      — run RAG chain for a farmer profile
 
 import dns from "node:dns";
-dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+// DNS workaround for Windows MongoDB compatibility (Google Public DNS)
+if (process.platform === "win32") {
+  dns.setServers(["8.8.8.8", "8.8.4.4"]);
+}
 
 import express, { Request, Response } from "express";
 import cors from "cors";
