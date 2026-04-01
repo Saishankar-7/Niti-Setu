@@ -20,7 +20,12 @@ export async function connectDB(): Promise<Db> {
     throw new Error("❌ MONGODB_URI is not defined in environment variables.");
   }
 
-  client = new MongoClient(MONGODB_URI);
+  client = new MongoClient(MONGODB_URI, {
+    // Explicitly disable IPv6 connection attempts if not supported by the environment.
+    // This is a known fix for Render/Serverless connection issues.
+    autoSelectFamily: false,
+    connectTimeoutMS: 10000,
+  });
   await client.connect();
   db = client.db("nitisetu");
   console.log("✅ Connected to MongoDB Atlas");
