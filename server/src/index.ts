@@ -1,0 +1,66 @@
+// server/src/index.ts
+// Express server entry point for the Niti-Setu RAG backend.
+//
+// Routes:
+//   GET  /api/health           — health check
+//   GET  /api/schemes          — fetch all schemes from MongoDB
+//   GET  /api/schemes/:id/chunks — chunk count for a scheme
+//   POST /api/schemes/upload   — upload a new PDF and trigger ingestion
+//   POST /api/eligibility      — run RAG chain for a farmer profile
+
+import dns from "node:dns";
+dns.setServers(["8.8.8.8", "8.8.4.4"]);
+
+import express, { Request, Response } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import { connectDB } from "./db.js";
+import eligibilityRoutes from "./routes/eligibility.js";
+import schemesRoutes from "./routes/schemes.js";
+import profilesRoutes from "./routes/profiles.js";
+import { errorHandler } from "./middleware/errorHandler.js";
+
+dotenv.config();
+
+const app  = express();
+const PORT = process.env.PORT || 5000;
+
+// ── Middleware ────────────────────────────────────────────────────────
+app.use(cors({
+  origin: ["http://localhost:3000", "http://127.0.0.1:3000"],
+  methods: ["GET", "POST"],
+}));
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
+
+// ── Routes ────────────────────────────────────────────────────────────
+app.get("/api/health", (_req: Request, res: Response) => {
+  res.set("Cache-Control", "no-store");
+  res.json({ status: "ok", timestamp: new Date().toISOString() });
+});
+
+app.use("/api/eligibility", eligibilityRoutes);
+app.use("/api/schemes",     schemesRoutes);
+app.use("/api/profiles",    profilesRoutes);
+
+// ── Global error handler ──────────────────────────────────────────────
+app.use(errorHandler);
+
+// ── Start ─────────────────────────────────────────────────────────────
+async function start(): Promise<void> {
+  try {
+    await connectDB();
+    app.listen(PORT, () => {
+      console.log(`\n🚀 Niti-Setu RAG Server running on http://localhost:${PORT}`);
+      console.log(`   Health:      GET  /api/health`);
+      console.log(`   Schemes:     GET  /api/schemes`);
+      console.log(`   Eligibility: POST /api/eligibility`);
+      console.log(`   Upload PDF:  POST /api/schemes/upload\n`);
+    });
+  } catch (err) {
+    console.error("❌ Failed to start server:", err);
+    process.exit(1);
+  }
+}
+
+start();
