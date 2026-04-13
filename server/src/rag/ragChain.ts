@@ -7,7 +7,7 @@ import type { FarmerProfile, Scheme, RAGResult, SchemeResult } from "../types.js
 dotenv.config();
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY as string);
-const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash-lite" });
 
 const SYSTEM_PROMPT = `You are "Niti-Setu AI", an expert on Indian government schemes for farmers.
 Determine eligibility based ONLY on provided PDF excerpts.
